@@ -1,0 +1,24 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "ziyue.tjmetro.mod.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "BlockRailwaySignPoleMixin",
+        "CustomResourceLoaderMixin",
+        "DynamicTextureCacheMixin",
+        "RenderVehiclesMixin",
+        "RouteMapGeneratorMixin",
+        "VehicleResourceMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "client": [
+        "DynamicVehicleModelMixin",
+        "EditRouteScreenMixin",
+        "RailwaySignScreenMixin",
+        "RenderRailwaySignMixin",
+        "SidingScreenMixin"
+    ]
+}

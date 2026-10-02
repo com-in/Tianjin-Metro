@@ -1,10 +1,6 @@
 package ziyue.tjmetro.mapping;
 
-#if MC_VERSION <= "11605"
-import net.minecraft.world.GameRules;
-#else
 import net.minecraft.world.level.GameRules;
-#endif
 import ziyue.tjmetro.forge.mixin.GameRuleBooleanAccessor;
 import ziyue.tjmetro.forge.mixin.GameRuleIntegerAccessor;
 

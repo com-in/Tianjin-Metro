@@ -29,7 +29,7 @@ subprojects {
         maven { url "https://maven.shedaniel.me/" }
     }
 
-    def mc_ver = rootProject.properties.minecraft_version
+    def mc_ver = project.hasProperty("minecraft_version") ? project.property("minecraft_version") : rootProject.properties.minecraft_version
     def mc_major = mc_ver.split("\\.")[0]
     def mc_main = mc_ver.split("\\.")[1]
     def mc_minor = mc_ver.split("\\.").size() > 2 ? (mc_ver.split("\\.")[2] as String).padLeft(2, '0') : 0
@@ -68,6 +68,13 @@ subprojects {
             )
         }
 
+        filesMatching('META-INF/neoforge.mods.toml') {
+            expand(
+                    "minecraft_version": minecraft_version,
+                    "version": mod_version
+            )
+        }
+
         filesMatching("fabric.mod.json") {
             expand(
                     "version": mod_version,
@@ -78,14 +85,8 @@ subprojects {
 }
 
 subprojects {
-    build.finalizedBy(mergeJars)
-    assemble.finalizedBy(mergeJars)
-}
-
-subprojects {
     tasks.register('buildJar', Jar) {
         from sourceSets.main.output
-        if (minecraft_version != "1.20.4" || loader_name != "fabric") exclude 'assets'
     }
 
     tasks.register('sourcesJar', Jar) {

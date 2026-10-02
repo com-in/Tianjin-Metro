@@ -3,7 +3,7 @@ package ziyue.tjmetro.centralconfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import org.mtr.mapping.holder.MutableText;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -26,7 +26,7 @@ public class MasterCategory extends ModuleCategory
      * @param configBuilderSupplier configurations for the config screen itself
      * @see ModuleCategory#ModuleCategory(String, Supplier, BiConsumer)
      */
-    public MasterCategory(String modId, Supplier<MutableText> titleSupplier, BiConsumer<ConfigEntryBuilder, ConfigCategory> categorySupplier, Supplier<ConfigBuilder> configBuilderSupplier) {
+    public MasterCategory(String modId, Supplier<Component> titleSupplier, BiConsumer<ConfigEntryBuilder, ConfigCategory> categorySupplier, Supplier<ConfigBuilder> configBuilderSupplier) {
         super(modId, titleSupplier, categorySupplier);
         this.configBuilderSupplier = configBuilderSupplier;
     }

@@ -2,7 +2,7 @@ package ziyue.tjmetro.centralconfig;
 
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import org.mtr.mapping.holder.MutableText;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -22,7 +22,7 @@ public class ModuleCategory
      * The unique key of the category.
      */
     public final String modId;
-    protected final Supplier<MutableText> titleSupplier;
+    protected final Supplier<Component> titleSupplier;
     protected final BiConsumer<ConfigEntryBuilder, ConfigCategory> categoryBiConsumer;
 
     /**
@@ -32,7 +32,7 @@ public class ModuleCategory
      * @param titleSupplier      category name
      * @param categoryBiConsumer {@code ConfigEntryBuilder} is for adding configs, and {@code ConfigCategory} is the category instance that created with the category name that provided by {@code titleSupplier}.
      */
-    public ModuleCategory(String modId, Supplier<MutableText> titleSupplier, BiConsumer<ConfigEntryBuilder, ConfigCategory> categoryBiConsumer) {
+    public ModuleCategory(String modId, Supplier<Component> titleSupplier, BiConsumer<ConfigEntryBuilder, ConfigCategory> categoryBiConsumer) {
         this.modId = modId;
         this.titleSupplier = titleSupplier;
         this.categoryBiConsumer = categoryBiConsumer;

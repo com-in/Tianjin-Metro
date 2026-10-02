@@ -1,11 +1,15 @@
 package ziyue.tjmetro.mapping;
 
-import org.mtr.mapping.holder.ItemStack;
-import org.mtr.mapping.holder.MutableText;
-import org.mtr.mapping.holder.PressAction;
-import org.mtr.mapping.registry.BlockRegistryObject;
-import org.mtr.mapping.registry.CreativeModeTabHolder;
-import org.mtr.mapping.registry.ItemRegistryObject;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.common.CreativeModeTabRegistry;
+import org.mtr.registry.ObjectHolder;
 import ziyue.filters.Filter;
 
 import java.util.function.Supplier;
@@ -15,48 +19,36 @@ import java.util.function.Supplier;
  */
 public interface FilterBuilder
 {
-#if MC_VERSION <= "11902"
-    static Filter registerFilter(CreativeModeTabHolder creativeModeTab, MutableText filterName, Supplier<ItemStack> filterIcon) {
-        return ziyue.filters.FilterBuilder.registerFilter(creativeModeTab.creativeModeTab, filterName.data, () -> filterIcon.get().data);
+    static Filter registerFilter(String creativeModeTab, Component filterName, Supplier<ItemStack> filterIcon) {
+        return ziyue.filters.FilterBuilder.registerFilter(getTab(creativeModeTab), filterName, filterIcon);
     }
 
-    static Filter registerUncategorizedItemsFilter(CreativeModeTabHolder creativeModeTab) {
-        return ziyue.filters.FilterBuilder.registerUncategorizedItemsFilter(creativeModeTab.creativeModeTab);
+    static Filter registerUncategorizedItemsFilter(String creativeModeTab) {
+        return ziyue.filters.FilterBuilder.registerUncategorizedItemsFilter(getTab(creativeModeTab));
     }
 
-    static void filtersVisibility(CreativeModeTabHolder creativeModeTab, boolean visible) {
-        ziyue.filters.FilterBuilder.filtersVisibility(creativeModeTab.creativeModeTab, visible);
+    static void filtersVisibility(String creativeModeTab, boolean visible) {
+        if (!ModLoaderHelper.hasFilters()) return;
+        ziyue.filters.FilterBuilder.filtersVisibility(getTab(creativeModeTab), visible);
     }
 
-    static void setReservedButton(CreativeModeTabHolder creativeModeTab, MutableText tooltip, PressAction onPress) {
-        ziyue.filters.FilterBuilder.setReservedButton(creativeModeTab.creativeModeTab, tooltip.data, onPress);
-    }
-#else
-    static Filter registerFilter(CreativeModeTabHolder creativeModeTab, MutableText filterName, Supplier<ItemStack> filterIcon) {
-        return ziyue.filters.FilterBuilder.registerFilter(net.minecraftforge.common.CreativeModeTabRegistry.getTab(creativeModeTab.identifier), filterName.data, () -> filterIcon.get().data);
+    static void setReservedButton(String creativeModeTab, Component tooltip, Button.OnPress onPress) {
+        ziyue.filters.FilterBuilder.setReservedButton(getTab(creativeModeTab), tooltip, onPress);
     }
 
-    static Filter registerUncategorizedItemsFilter(CreativeModeTabHolder creativeModeTab) {
-        return ziyue.filters.FilterBuilder.registerUncategorizedItemsFilter(net.minecraftforge.common.CreativeModeTabRegistry.getTab(creativeModeTab.identifier));
-    }
-
-    static void filtersVisibility(CreativeModeTabHolder creativeModeTab, boolean visible) {
-        ziyue.filters.FilterBuilder.filtersVisibility(net.minecraftforge.common.CreativeModeTabRegistry.getTab(creativeModeTab.identifier), visible);
-    }
-
-    static void setReservedButton(CreativeModeTabHolder creativeModeTab, MutableText tooltip, PressAction onPress) {
-        ziyue.filters.FilterBuilder.setReservedButton(net.minecraftforge.common.CreativeModeTabRegistry.getTab(creativeModeTab.identifier), tooltip.data, onPress);
-    }
-#endif
-    static void addBlocks(Filter filter, BlockRegistryObject... blocks) {
-        for (BlockRegistryObject block : blocks) {
-            filter.addItems(block.get().asItem().data);
+    static void addBlocks(Filter filter, ObjectHolder<Block>... blocks) {
+        for (ObjectHolder<Block> block : blocks) {
+            filter.addItems(block.get().asItem());
         }
     }
 
-    static void addItems(Filter filter, ItemRegistryObject... items) {
-        for (ItemRegistryObject item : items) {
-            filter.addItems(item.get().data);
+    static void addItems(Filter filter, ObjectHolder<Item>... items) {
+        for (ObjectHolder<Item> item : items) {
+            filter.addItems(item.get());
         }
+    }
+
+    private static CreativeModeTab getTab(String tabId) {
+        return CreativeModeTabRegistry.getTab(ResourceLocation.fromNamespaceAndPath(ziyue.tjmetro.mod.Reference.MOD_ID, tabId));
     }
 }

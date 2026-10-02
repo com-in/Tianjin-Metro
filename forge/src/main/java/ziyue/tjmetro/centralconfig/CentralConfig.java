@@ -3,7 +3,7 @@ package ziyue.tjmetro.centralconfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import org.mtr.mapping.holder.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -49,21 +49,21 @@ public final class CentralConfig
      * @see #getConfigScreen(Screen, String)
      */
     public Screen getConfigScreen() {
-        return getConfigScreen(new Screen(null), (String) null);
+        return getConfigScreen(null, (String) null);
     }
 
     /**
      * @see #getConfigScreen(Screen, String)
      */
     public Screen getConfigScreen(ModuleCategory category) {
-        return getConfigScreen(new Screen(null), category.modId);
+        return getConfigScreen(null, category.modId);
     }
 
     /**
      * @see #getConfigScreen(Screen, String)
      */
     public Screen getConfigScreen(String categoryModId) {
-        return getConfigScreen(new Screen(null), categoryModId);
+        return getConfigScreen(null, categoryModId);
     }
 
     /**
@@ -90,16 +90,16 @@ public final class CentralConfig
      * @since 1.0
      */
     public Screen getConfigScreen(Screen parent, String categoryModId) {
-        ConfigBuilder builder = masterCategory.configBuilderSupplier.get().setParentScreen(parent.data);
+        ConfigBuilder builder = masterCategory.configBuilderSupplier.get().setParentScreen(parent);
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
-        ConfigCategory defaultCategory = builder.getOrCreateCategory(masterCategory.titleSupplier.get().data);
+        ConfigCategory defaultCategory = builder.getOrCreateCategory(masterCategory.titleSupplier.get());
         masterCategory.categoryBiConsumer.accept(entryBuilder, defaultCategory);
         for (ModuleCategory moduleCategory : moduleCategories) {
-            ConfigCategory category = builder.getOrCreateCategory(moduleCategory.titleSupplier.get().data);
+            ConfigCategory category = builder.getOrCreateCategory(moduleCategory.titleSupplier.get());
             moduleCategory.categoryBiConsumer.accept(entryBuilder, category);
             if (moduleCategory.modId.equals(categoryModId)) builder.setFallbackCategory(category);
         }
 
-        return new Screen(builder.build());
+        return builder.build();
     }
 }

@@ -1,11 +1,7 @@
 package ziyue.tjmetro.mapping;
 
-import org.mtr.mapping.holder.Identifier;
-import org.mtr.mapping.registry.BlockRegistryObject;
-import org.mtr.mapping.registry.ItemRegistryObject;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * @author ZiYueCommentary
@@ -14,50 +10,15 @@ import java.lang.reflect.InvocationTargetException;
 
 public interface RegistryHelper
 {
-    static ItemRegistryObject RegistryObjectBlock2Item(BlockRegistryObject fabric, Identifier forge)
-            throws InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException {
-        // This is a very mad way but I have no choice.
-        Class<ItemRegistryObject> clazz = ItemRegistryObject.class;
-        Constructor<ItemRegistryObject> constructor = clazz.getDeclaredConstructor(Identifier.class);
-        constructor.setAccessible(true);
-        return constructor.newInstance(forge);
-    }
-
-#if MC_VERSION >= "11701"
-    
     static net.minecraft.world.item.ItemStack cloneSingleItemStack(net.minecraft.world.item.ItemStack itemStack) {
         return new net.minecraft.world.item.ItemStack(itemStack.getItem());
     }
 
-    static Identifier getIdentifierByItem(net.minecraft.world.item.Item item) {
-#if MC_VERSION >= "11904"
-        return new Identifier(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item));
-#else
-        return new Identifier(net.minecraft.core.Registry.ITEM.getKey(item));
-#endif
+    static ResourceLocation getIdentifierByItem(net.minecraft.world.item.Item item) {
+        return BuiltInRegistries.ITEM.getKey(item);
     }
 
-    static net.minecraft.world.item.ItemStack getItemStackByIdentifier(Identifier identifier) {
-#if MC_VERSION >= "11904"
-        return net.minecraft.core.registries.BuiltInRegistries.ITEM.get(identifier.data).getDefaultInstance();
-#else
-        return net.minecraft.core.Registry.ITEM.get(identifier.data).getDefaultInstance();
-#endif
+    static net.minecraft.world.item.ItemStack getItemStackByIdentifier(ResourceLocation identifier) {
+        return BuiltInRegistries.ITEM.get(identifier).getDefaultInstance();
     }
-    
-#else
-
-    static net.minecraft.item.ItemStack cloneSingleItemStack(net.minecraft.item.ItemStack itemStack) {
-        return new net.minecraft.item.ItemStack(itemStack.getItem());
-    }
-
-    static Identifier getIdentifierByItem(net.minecraft.item.Item item) {
-        return new Identifier(net.minecraft.util.registry.Registry.ITEM.getKey(item));
-    }
-
-    static net.minecraft.item.ItemStack getItemStackByIdentifier(Identifier identifier) {
-        return net.minecraft.util.registry.Registry.ITEM.get(identifier.data).getDefaultInstance();
-    }
-    
-#endif
 }

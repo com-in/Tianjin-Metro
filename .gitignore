@@ -33,11 +33,10 @@ bin/
 
 fabric/run/
 run/
-forge/src/main/java/**/mod
-forge/src/main/resources/assets
-forge/src/main/resources/data
 forge/run
 
 !en_us.json
-/forge/src/main/resources/tjmetro.mixins.json
 /forge/src/main/java/ziyue/centralconfig/
+
+# trae
+.trae/
