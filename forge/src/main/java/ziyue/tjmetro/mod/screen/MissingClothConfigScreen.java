@@ -42,10 +42,10 @@ public class MissingClothConfigScreen extends Screen
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         try {
-            renderBackground(guiGraphics, mouseX, mouseY, delta);
+            // Screen.render() already draws the background, so everything below must be drawn afterwards or it gets covered.
+            super.render(guiGraphics, mouseX, mouseY, delta);
             guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("config.tjmetro.cloth_config_not_found"), width / 2, height / 2 - TEXT_PADDING * 3, ARGB_WHITE);
             guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("config.tjmetro.cloth_config_required"), width / 2, height / 2 - TEXT_PADDING, ARGB_WHITE);
-            super.render(guiGraphics, mouseX, mouseY, delta);
         } catch (Exception e) {
             TianjinMetro.LOGGER.error(e.getMessage(), e);
         }

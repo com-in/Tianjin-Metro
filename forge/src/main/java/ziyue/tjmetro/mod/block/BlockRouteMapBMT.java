@@ -140,15 +140,13 @@ public class BlockRouteMapBMT extends BlockRailwaySignBase implements IBlockTool
         return IBlock.checkHoldingItem(world, player, item -> {
             final BlockPos blockPos = IBlock.getStatePropertySafe(world, pos, HALF) == DoubleBlockHalf.LOWER ? pos.above() : pos;
             final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
-            final Direction hitSide = hit.getDirection();
-            if (hitSide == facing || hitSide == facing.getOpposite()) {
-                final BlockPos checkPos = findEndWithDirection(world, blockPos, hitSide.getOpposite(), false);
-                if (checkPos != null) {
-                    if (item == Items.BRUSH.get()) {
-                        world.setBlock(checkPos, world.getBlockState(checkPos).cycle(SIDE), 3);
-                    } else {
-                        Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
-                    }
+            // 沿 facing 方向回溯定位主块，任意一块/一面都能命中
+            final BlockPos checkPos = findEndWithDirection(world, blockPos, facing, false);
+            if (checkPos != null) {
+                if (item == Items.BRUSH.get()) {
+                    world.setBlock(checkPos, world.getBlockState(checkPos).cycle(SIDE), 3);
+                } else {
+                    Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
                 }
             }
         }, null, Items.BRUSH.get(), ItemList.WRENCH.get());

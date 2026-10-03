@@ -150,13 +150,11 @@ public class BlockRailwaySignTianjinBMT extends BlockRailwaySignBase implements 
     @Override
     public @Nonnull InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
-        final Direction hitSide = hit.getDirection();
-        final BlockPos checkPos = findEndWithDirection(world, pos, hitSide.getOpposite(), false);
+        // 沿 facing 方向回溯定位主块（持方块实体），不再依赖点击面，任意一块/一面都能打开界面
+        final BlockPos checkPos = findEndWithDirection(world, pos, facing, false);
         return IBlockExtension.checkHoldingBrushOrWrench(world, player, () -> {
-            if (hitSide == facing || hitSide == facing.getOpposite()) {
-                if (checkPos != null) {
-                    Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
-                }
+            if (checkPos != null) {
+                Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
             }
         });
     }

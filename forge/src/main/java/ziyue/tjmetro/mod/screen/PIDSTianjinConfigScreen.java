@@ -19,6 +19,7 @@ import org.mtr.data.IGui;
 import org.mtr.generated.lang.TranslationProvider;
 import org.mtr.libraries.it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.mtr.libraries.it.unimi.dsi.fastutil.objects.ObjectImmutableList;
 import org.mtr.screen.DashboardListItem;
 import ziyue.tjmetro.mod.RegistryClient;
@@ -100,11 +101,11 @@ public class PIDSTianjinConfigScreen extends Screen implements IGui
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics, mouseX, mouseY, delta);
+        // Screen.render() already draws the background, so everything below must be drawn afterwards or it gets covered.
+        super.render(guiGraphics, mouseX, mouseY, delta);
         guiGraphics.drawString(Minecraft.getInstance().font, TranslationProvider.GUI_MTR_DISPLAY_PAGE.getText(), SQUARE_SIZE, SQUARE_SIZE * 4 + TEXT_PADDING, ARGB_WHITE);
         guiGraphics.drawString(Minecraft.getInstance().font, TranslationProvider.GUI_MTR_FILTERED_PLATFORMS.getText(selectAllCheckbox.selected() ? 0 : filterPlatformIds.size()), SQUARE_SIZE, SQUARE_SIZE * 2 + TEXT_PADDING, ARGB_WHITE);
         guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.tjmetro.filtered_ads", filteredAdsCount), SQUARE_SIZE, SQUARE_SIZE * 6 + TEXT_PADDING * 2, ARGB_WHITE);
-        super.render(guiGraphics, mouseX, mouseY, delta);
     }
 
     @Override
@@ -114,23 +115,67 @@ public class PIDSTianjinConfigScreen extends Screen implements IGui
 
     public static Button getPlatformFilterButton(BlockPos blockPos, Checkbox selectAllCheckbox, LongAVLTreeSet filterPlatformIds, Screen thisScreen) {
         return Button.builder(Component.empty(), button -> {
-            final Station station = MTRClient.findStation(blockPos);
-
-            final ObjectImmutableList<DashboardListItem> platformsForList;
-            if (station != null) {
-                platformsForList = getPlatformsForList(new ObjectArrayList<>(station.savedRails));
-            } else {
-                final ObjectArrayList<Platform> nearbyPlatforms = new ObjectArrayList<>();
-                MTRClient.findClosePlatform(blockPos.below(4), 5, nearbyPlatforms::add);
-                platformsForList = getPlatformsForList(nearbyPlatforms);
-            }
+            final ObjectImmutableList<DashboardListItem> platformsForList = getPlatformsForList(getPlatformsForBlock(blockPos));
 
             if (selectAllCheckbox.selected()) {
                 filterPlatformIds.clear();
             }
 
-            Minecraft.getInstance().setScreen(new DashboardListSelectorScreen(() -> IGui.setChecked(selectAllCheckbox, filterPlatformIds.isEmpty()), platformsForList, filterPlatformIds, false, false, thisScreen));
+            Minecraft.getInstance().setScreen(new DashboardListSelectorScreen(() -> IGui.setChecked(selectAllCheckbox, filterPlatformIds.isEmpty()), platformsForList, filterPlatformIds, false, false, thisScreen).withEmptyMessage("gui.tjmetro.no_available_platforms"));
         }).bounds(0, 0, 0, SQUARE_SIZE).build();
+    }
+
+    /**
+     * Resolves the platforms to list for the given position. Blocks are often placed just outside the
+     * station area, so this falls back progressively: the platforms MTR associated with the station,
+     * then a manual sweep of the station area, then an expanding radius around the block, and finally
+     * every platform the client knows about.
+     */
+    public static ObjectArrayList<Platform> getPlatformsForBlock(BlockPos blockPos) {
+        final Station station = MTRClient.findStation(blockPos);
+        final ObjectArraySet<Platform> allPlatforms = MinecraftClientData.getInstance().platforms;
+
+        ObjectArrayList<Platform> platforms = null;
+        if (station != null && !station.savedRails.isEmpty()) {
+            platforms = new ObjectArrayList<>(station.savedRails);
+        } else if (station != null) {
+            final ObjectArrayList<Platform> inArea = new ObjectArrayList<>();
+            allPlatforms.forEach(platform -> {
+                if (station.inArea(platform.getMidPosition())) {
+                    inArea.add(platform);
+                }
+            });
+            if (!inArea.isEmpty()) {
+                platforms = inArea;
+            }
+        }
+
+        if (platforms == null) {
+            for (final int radius : new int[]{5, 16, 32, 64}) {
+                final ObjectArrayList<Platform> nearby = new ObjectArrayList<>();
+                MTRClient.findClosePlatform(blockPos.below(4), radius, nearby::add);
+                if (!nearby.isEmpty()) {
+                    platforms = nearby;
+                    break;
+                }
+            }
+        }
+
+        if (platforms == null) {
+            platforms = new ObjectArrayList<>(allPlatforms);
+        }
+
+        TianjinMetro.LOGGER.info("[TJDATA] pos={} station={} savedRails={} clientStations={} clientPlatforms={} clientRails={} resolved={}",
+                blockPos.toShortString(),
+                station == null ? "null" : station.getName(),
+                station == null ? -1 : station.savedRails.size(),
+                MinecraftClientData.getInstance().stations.size(),
+                allPlatforms.size(),
+                MinecraftClientData.getInstance().rails.size(),
+                platforms.size()
+        );
+
+        return platforms;
     }
 
     public static ObjectImmutableList<DashboardListItem> getPlatformsForList(ObjectArrayList<Platform> platforms) {

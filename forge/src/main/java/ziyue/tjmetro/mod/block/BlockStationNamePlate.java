@@ -126,17 +126,15 @@ public class BlockStationNamePlate extends BlockRailwaySignBase implements IBloc
     @Nonnull
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+        final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
+        // 沿 facing 方向回溯定位主块，任意一块/一面都能命中
+        final BlockPos checkPos = findEndWithDirection(world, pos, facing, false);
         return IBlock.checkHoldingItem(world, player, item -> {
-            final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
-            final Direction hitSide = hit.getDirection();
-            if (hitSide == facing || hitSide == facing.getOpposite()) {
-                final BlockPos checkPos = findEndWithDirection(world, pos, hitSide.getOpposite(), false);
-                if (checkPos != null) {
-                    if (item == Items.BRUSH.get()) {
-                        world.setBlock(checkPos, world.getBlockState(checkPos).cycle(ARROW_DIRECTION), 3);
-                    } else {
-                        Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
-                    }
+            if (checkPos != null) {
+                if (item == Items.BRUSH.get()) {
+                    world.setBlock(checkPos, world.getBlockState(checkPos).cycle(ARROW_DIRECTION), 3);
+                } else {
+                    Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
                 }
             }
         }, null, Items.BRUSH.get(), ItemList.WRENCH.get());

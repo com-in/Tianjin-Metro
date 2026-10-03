@@ -137,7 +137,7 @@ public final class ClientPacketHelper
                         selectedRoutes,
                         false,
                         false,
-                        null), screen -> screen instanceof DashboardListSelectorScreen);
+                        null).withEmptyMessage("gui.tjmetro.no_available_routes"), screen -> screen instanceof DashboardListSelectorScreen);
             } else {
                 TianjinMetro.LOGGER.warn("Unknown block entity data at {}: {}", blockPos.toShortString(), blockEntity);
             }

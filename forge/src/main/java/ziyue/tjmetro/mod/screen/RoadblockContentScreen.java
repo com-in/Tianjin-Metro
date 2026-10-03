@@ -48,9 +48,9 @@ public class RoadblockContentScreen extends Screen implements IGui
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         try {
-            renderBackground(guiGraphics, mouseX, mouseY, delta);
-            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.tjmetro.custom_content"), SQUARE_SIZE, TEXT_PADDING, ARGB_WHITE);
+            // Screen.render() already draws the background, so everything below must be drawn afterwards or it gets covered.
             super.render(guiGraphics, mouseX, mouseY, delta);
+            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.tjmetro.custom_content"), SQUARE_SIZE, TEXT_PADDING, ARGB_WHITE);
         } catch (Exception e) {
             TianjinMetro.LOGGER.error(e.getMessage(), e);
         }

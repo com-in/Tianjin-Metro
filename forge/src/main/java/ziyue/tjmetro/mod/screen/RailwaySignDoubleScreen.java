@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
@@ -15,6 +14,7 @@ import org.mtr.MTRClient;
 import org.mtr.client.CustomResourceLoader;
 import org.mtr.client.IDrawing;
 import org.mtr.client.MinecraftClientData;
+import org.mtr.core.data.Platform;
 import org.mtr.core.data.Station;
 import org.mtr.data.IGui;
 import org.mtr.libraries.it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
@@ -81,16 +81,19 @@ public class RailwaySignDoubleScreen extends Screen implements IGui
         CustomResourceLoader.getSortedSigns().forEach(sign -> allSignIds.add(sign.signId));
 
         final Station station = MTRClient.findStation(signPos);
+        final ObjectArrayList<Platform> platformsForBlock = PIDSTianjinConfigScreen.getPlatformsForBlock(signPos);
         if (station == null) {
             exitsForList = ObjectImmutableList.of();
-            platformsForList = ObjectImmutableList.of();
+            platformsForList = PIDSTianjinConfigScreen.getPlatformsForList(platformsForBlock);
             stationsForList = new ObjectArraySet<>();
-            routesForList = new ObjectArraySet<>();
+            final LongAVLTreeSet platformIds = new LongAVLTreeSet();
+            platformsForBlock.forEach(platform -> platformIds.add(platform.getId()));
+            routesForList = getRoutesForList(platformIds);
         } else {
             final ObjectArrayList<DashboardListItem> exitsForDashboardList = new ObjectArrayList<>();
             station.getExits().forEach(exit -> exitsForDashboardList.add(new DashboardListItem(org.mtr.screen.RailwaySignScreen.serializeExit(exit.getName()), exit.getName(), 0)));
             exitsForList = new ObjectImmutableList<>(exitsForDashboardList);
-            platformsForList = PIDSTianjinConfigScreen.getPlatformsForList(new ObjectArrayList<>(station.savedRails));
+            platformsForList = PIDSTianjinConfigScreen.getPlatformsForList(platformsForBlock);
 
             final ObjectArraySet<Station> connectingStationsIncludingThisOne = new ObjectArraySet<>(station.connectedStations);
             connectingStationsIncludingThisOne.add(station);
@@ -99,15 +102,7 @@ public class RailwaySignDoubleScreen extends Screen implements IGui
 
             final LongAVLTreeSet platformIds = new LongAVLTreeSet();
             connectingStationsIncludingThisOne.forEach(connectingStation -> connectingStation.savedRails.forEach(platform -> platformIds.add(platform.getId())));
-            routesForList = new ObjectArraySet<>();
-            final IntAVLTreeSet addedColors = new IntAVLTreeSet();
-            MinecraftClientData.getInstance().simplifiedRoutes.forEach(simplifiedRoute -> {
-                final int color = simplifiedRoute.getColor();
-                if (!addedColors.contains(color) && simplifiedRoute.getPlatforms().stream().anyMatch(simplifiedRoutePlatform -> platformIds.contains(simplifiedRoutePlatform.getPlatformId()))) {
-                    routesForList.add(new DashboardListItem(color, simplifiedRoute.getName().split("\\|\\|")[0], color));
-                    addedColors.add(color);
-                }
-            });
+            routesForList = getRoutesForList(platformIds);
         }
 
         if (world != null) {
@@ -153,9 +148,22 @@ public class RailwaySignDoubleScreen extends Screen implements IGui
             buttonsSelection[i] = Button.builder(Component.empty(), button -> setNewSignId(allSignIds.get(index))).bounds(0, 0, 0, SIGN_BUTTON_SIZE).build();
         }
 
-        buttonClear = Button.builder(Component.translatable("gui.mtr.reset_sign"), button -> setNewSignId(null)).bounds(0, 0, 0, SQUARE_SIZE).build();
+        buttonClear = Button.builder(Component.translatable("gui.mtr.reset"), button -> setNewSignId(null)).bounds(0, 0, 0, SQUARE_SIZE).build();
         buttonPrevPage = Button.builder(Component.literal("<"), button -> setPage(page - 1)).bounds(0, 0, 0, SQUARE_SIZE).build();
         buttonNextPage = Button.builder(Component.literal(">"), button -> setPage(page + 1)).bounds(0, 0, 0, SQUARE_SIZE).build();
+    }
+
+    private static ObjectArraySet<DashboardListItem> getRoutesForList(LongAVLTreeSet platformIds) {
+        final ObjectArraySet<DashboardListItem> routesForList = new ObjectArraySet<>();
+        final IntAVLTreeSet addedColors = new IntAVLTreeSet();
+        MinecraftClientData.getInstance().simplifiedRoutes.forEach(simplifiedRoute -> {
+            final int color = simplifiedRoute.getColor();
+            if (!addedColors.contains(color) && simplifiedRoute.getPlatforms().stream().anyMatch(simplifiedRoutePlatform -> platformIds.contains(simplifiedRoutePlatform.getPlatformId()))) {
+                routesForList.add(new DashboardListItem(color, simplifiedRoute.getName().split("\\|\\|")[0], color));
+                addedColors.add(color);
+            }
+        });
+        return routesForList;
     }
 
     @Override
@@ -196,21 +204,16 @@ public class RailwaySignDoubleScreen extends Screen implements IGui
         addRenderableWidget(buttonNextPage);
 
         if (!isRailwaySign) {
-            Minecraft.getInstance().setScreen(new DashboardListSelectorScreen(this::onClose, platformsForList, selectedIds.get(line), true, false, null));
+            Minecraft.getInstance().setScreen(new DashboardListSelectorScreen(this::onClose, platformsForList, selectedIds.get(line), true, false, null).withEmptyMessage("gui.tjmetro.no_available_platforms"));
         }
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics, mouseX, mouseY, delta);
         super.render(guiGraphics, mouseX, mouseY, delta);
 
         for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < signIds[i].length; j++) {
-                if (signIds[i][j] != null) {
-                    SignRenderer.drawSign(guiGraphics, signPos, signIds[i][j], (width - SIGN_SIZE * length) / 2F + j * SIGN_SIZE, i * (SQUARE_SIZE + SIGN_SIZE), SIGN_SIZE, SignRenderer.getMaxWidth(signIds[i], j, false), SignRenderer.getMaxWidth(signIds[i], j, true), selectedIds.get(i), Direction.UP, 0);
-                }
-            }
+            SignRenderer.drawSign(guiGraphics, signPos, signIds[i], selectedIds.get(i), (width - SIGN_SIZE * length) / 2F, i * (SQUARE_SIZE + SIGN_SIZE), SIGN_SIZE);
         }
 
         if (editingIndex >= 0) {
@@ -219,10 +222,8 @@ public class RailwaySignDoubleScreen extends Screen implements IGui
 
             loopSigns((index, x, y, isBig) -> {
                 final String signId = allSignIds.get(index);
-                final SignResource sign = SignRenderer.getSign(signId);
-                if (sign != null) {
-                    final boolean moveRight = sign.hasCustomText && sign.getFlipCustomText();
-                    SignRenderer.drawSign(guiGraphics, signPos, signId, (isBig ? xOffsetBig : xOffsetSmall) + x + (moveRight ? SIGN_BUTTON_SIZE * 2 : 0), BUTTON_Y_START + y, SIGN_BUTTON_SIZE, 2, 2, selectedIds.get(line), Direction.UP, 0);
+                if (SignRenderer.getSign(signId) != null) {
+                    SignRenderer.drawSign(guiGraphics, signPos, signId, isBig ? 3 : 1, selectedIds.get(line), (isBig ? xOffsetBig : xOffsetSmall) + x, BUTTON_Y_START + y, SIGN_BUTTON_SIZE);
                 }
             }, false);
 
@@ -335,7 +336,8 @@ public class RailwaySignDoubleScreen extends Screen implements IGui
             final boolean isLine = IRailwaySign.signIsLine(newSignId);
             final boolean isStation = IRailwaySign.signIsStation(newSignId);
             if ((isExitLetter || isPlatform || isLine || isStation)) {
-                Minecraft.getInstance().setScreen(new DashboardListSelectorScreen(this::onClose, new ObjectImmutableList<>(isExitLetter ? exitsForList : (isPlatform ? platformsForList : (isLine ? routesForList : stationsForList))), selectedIds.get(line), false, false, null));
+                Minecraft.getInstance().setScreen(new DashboardListSelectorScreen(this::onClose, new ObjectImmutableList<>(isExitLetter ? exitsForList : (isPlatform ? platformsForList : (isLine ? routesForList : stationsForList))), selectedIds.get(line), false, false, null)
+                        .withEmptyMessage(isExitLetter ? "gui.tjmetro.no_available_exits" : (isPlatform ? "gui.tjmetro.no_available_platforms" : (isLine ? "gui.tjmetro.no_available_routes" : "gui.tjmetro.no_available_stations"))));
             }
         }
     }

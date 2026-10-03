@@ -52,8 +52,9 @@ public class CategorySelectorScreen extends DashboardListSelectorScreen
     @Override
     protected void renderAdditional(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         final int spareSpace = Math.max(0, width - SQUARE_SIZE * 4 - PANEL_WIDTH * 2);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, TranslationProvider.GUI_MTR_AVAILABLE.getText(), SQUARE_SIZE * 2 + spareSpace + PANEL_WIDTH / 2, SQUARE_SIZE, ARGB_WHITE);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, TranslationProvider.GUI_MTR_SELECTED.getText(), SQUARE_SIZE * 3 + spareSpace + PANEL_WIDTH * 3 / 2, SQUARE_SIZE, ARGB_WHITE);
+        final Font font = Minecraft.getInstance().font;
+        guiGraphics.drawCenteredString(font, TranslationProvider.GUI_MTR_AVAILABLE.getText(), SQUARE_SIZE * 2 + spareSpace + PANEL_WIDTH / 2, SQUARE_SIZE, ARGB_WHITE);
+        guiGraphics.drawCenteredString(font, TranslationProvider.GUI_MTR_SELECTED.getText(), SQUARE_SIZE * 3 + spareSpace + PANEL_WIDTH * 3 / 2, SQUARE_SIZE, ARGB_WHITE);
 
         final int index = availableList.getHoverItemIndex();
         if (index < 0 || index >= categories.size()) return;

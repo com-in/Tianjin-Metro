@@ -41,7 +41,7 @@ side = "BOTH"
 
 [[dependencies.tjmetro]]
 modId = "filters"
-type = "optional"
+type = "required"
 versionRange = "1.0"
 ordering = "AFTER"
 side = "CLIENT"

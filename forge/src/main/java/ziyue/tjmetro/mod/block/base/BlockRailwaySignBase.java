@@ -108,6 +108,7 @@ import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import org.mtr.block.BlockEntityExtension;
 import org.mtr.render.BlockEntityRendererExtension;
 import org.mtr.block.IBlock;
+import ziyue.tjmetro.mod.block.IBlockExtension;
 import ziyue.tjmetro.mod.block.IBlockTooltip;
 import ziyue.tjmetro.mod.ItemList;
 import ziyue.tjmetro.mod.Registry;
@@ -142,19 +143,17 @@ public abstract class BlockRailwaySignBase extends Block implements IBlock, IBlo
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
-        final Direction hitSide = hit.getDirection();
-        final BlockPos checkPos = findEndWithDirection(world, pos, hitSide.getOpposite(), false);
-        if (player.isHolding(ItemList.WRENCH.get())) {
+        // 沿 facing 方向回溯即可定位到持有方块实体的主块，任意一块、任意一面均可命中
+        final BlockPos checkPos = findEndWithDirection(world, pos, facing, false);
+        if (player.isHolding(ItemList.WRENCH.get()) && player.isShiftKeyDown()) {
             if (checkPos != null && world.getBlockEntity(checkPos) instanceof BlockEntityBase entity) {
                 entity.setToggleStyle();
                 return InteractionResult.SUCCESS;
             }
         }
-        return IBlock.checkHoldingBrush(world, player, () -> {
-            if (hitSide == facing || hitSide == facing.getOpposite()) {
-                if (checkPos != null) {
-                    Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
-                }
+        return IBlockExtension.checkHoldingBrushOrWrench(world, player, () -> {
+            if (checkPos != null) {
+                Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
             }
         });
     }

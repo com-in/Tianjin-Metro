@@ -147,14 +147,15 @@ public class BlockRailwaySignWall extends BlockRailwaySignBase implements IRailw
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
         final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
+        // 沿着 facing 方向回溯即可找到持有方块实体的主块；从中间块、末端块点击也能命中
         final BlockPos checkPos = findEndWithDirection(world, pos, facing, false);
-        if (player.isHolding(ItemList.WRENCH.get())) {
+        if (player.isHolding(ItemList.WRENCH.get()) && player.isShiftKeyDown()) {
             if (checkPos != null && world.getBlockEntity(checkPos) instanceof BlockEntityBase entity) {
                 entity.setToggleStyle();
                 return InteractionResult.SUCCESS;
             }
         }
-        return IBlock.checkHoldingBrush(world, player, () -> {
+        return IBlockExtension.checkHoldingBrushOrWrench(world, player, () -> {
             if (checkPos != null) {
                 Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
             }

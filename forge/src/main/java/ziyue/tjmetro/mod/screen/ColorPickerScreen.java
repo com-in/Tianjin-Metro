@@ -74,7 +74,7 @@ public class ColorPickerScreen extends Screen implements IGui
             }
         }).build();
 
-        buttonReset = Button.builder(Component.translatable("gui.mtr.reset_sign"), button -> {
+        buttonReset = Button.builder(Component.translatable("gui.mtr.reset"), button -> {
             setHsb(oldColor, true);
             IGui.setChecked(checkboxDefaultColor, false);
             button.active = false;
@@ -111,13 +111,12 @@ public class ColorPickerScreen extends Screen implements IGui
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics, mouseX, mouseY, delta);
         super.render(guiGraphics, mouseX, mouseY, delta);
 
         final int mainWidth = getMainWidth();
         final int mainHeight = getMainHeight();
 
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("gui.mtr.color"), SQUARE_SIZE * 4 + mainWidth + RIGHT_WIDTH / 2, SQUARE_SIZE + 25, ARGB_WHITE);
+        guiGraphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("gui.tjmetro.color"), SQUARE_SIZE * 4 + mainWidth + RIGHT_WIDTH / 2, SQUARE_SIZE + 25, ARGB_WHITE);
         guiGraphics.drawCenteredString(Minecraft.getInstance().font, "RGB", SQUARE_SIZE * 4 + mainWidth + RIGHT_WIDTH / 2, SQUARE_SIZE * 3 + TEXT_FIELD_PADDING + 25, ARGB_WHITE);
 
         final int selectedColor = Color.HSBtoRGB(hue, saturation, brightness);

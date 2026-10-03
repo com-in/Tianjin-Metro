@@ -158,7 +158,9 @@ public class BlockStationNavigator extends BlockRailwaySignBase implements IBloc
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
         return IBlock.checkHoldingItem(world, player, item -> {
-            final BlockPos checkPos = findEndWithDirection(world, pos, hit.getDirection().getOpposite(), false);
+            final Direction facing = IBlock.getStatePropertySafe(state, BlockStateProperties.HORIZONTAL_FACING);
+            // 沿 facing 方向回溯定位主块，任意一块/一面都能命中
+            final BlockPos checkPos = findEndWithDirection(world, pos, facing, false);
             if (checkPos != null) {
                 if (item == ItemList.WRENCH.get()) {
                     Registry.sendPacketToClient(((ServerPlayer) player), new PacketOpenBlockEntityScreen(checkPos));
